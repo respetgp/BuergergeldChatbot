@@ -1,15 +1,36 @@
-from ocr_utils import extract_text_from_pdf
-from analyzer import analyze_text
-from response_generator import generate_client_response, generate_jobcenter_letter
+# main.py
 
-# Замените путь на актуальный, если файл в другом месте
-text = extract_text_from_pdf("/Users/respectgp/PycharmProjects/BuergergeldChatbot/app/bescheid.pdf")
+from app.ocr_utils import extract_text_from_pdf, extract_text_from_image
+from app.response_generator import explain_problem, generate_jobcenter_letter
 
-if text:
-    problem = analyze_text(text)
-    print("Ответ клиенту:")
-    print(generate_client_response(problem))
-    print("\nПисьмо в Jobcenter:")
-    print(generate_jobcenter_letter(problem))
-else:
-    print("Ошибка: не удалось извлечь текст из PDF.")
+def main():
+    # 1) Укажите путь к файлу PDF или изображению:
+    file_path = "app/bescheid.pdf"  # либо "app/example.jpg", "app/example.png" и т.п.
+
+    # 2) Распознаём текст
+    if file_path.lower().endswith(".pdf"):
+        text = extract_text_from_pdf(file_path)
+    else:
+        text = extract_text_from_image(file_path)
+
+    # 3) Проверка
+    if not text:
+        print("❌ Ошибка: не удалось извлечь текст из файла.")
+        return
+
+    # 4) Объясняем пользователю на русском, что в письме
+    print("📌 Объяснение для клиента:")
+    explanation = explain_problem(text)
+    print(explanation)
+
+    # 5) Спрашиваем, готовим ли письмо
+    choice = input("\nХотите, чтобы я подготовил письмо в Jobcenter? (y/n): ").strip().lower()
+    if choice in ("y", "yes", "д", "да"):
+        print("\n📄 Письмо в Jobcenter:")
+        letter = generate_jobcenter_letter(text)
+        print(letter)
+    else:
+        print("\nХорошо, письмо не готовим. Вы можете запустить программу снова.")
+
+if __name__ == "__main__":
+    main()
